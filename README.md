@@ -60,7 +60,7 @@ If we configure SSH keys or some other method to SSH easily to webservers, we ca
 
     ssh <host> "tail -f /path/to/access_log| egrep -e ' [[:digit:]]+$' | ./process_log_input.py
 
-View process_log_input.py for details.
+View [process_log_input.py]( https://github.com/terryjbates/redis-log-import/blob/master/process_log_input.py "Title") for details.
 
 So, we now have a number of *ZSET*S pegged to individual collection numerical ids. To view log entries for a collection with numerical ID of, "1824" for example, within the redis-cli:
 
@@ -73,7 +73,7 @@ Within Python with the redis module ipmorted, to get a list of the log lines, so
     for log_line in conn.zrange('logs:collid:' + collid , 0, -1):
         print log_line
 
-View retrieve_log_entries.py here.
+View [retrieve_log_entries.py]( https://github.com/terryjbates/redis-log-import/blob/master/retrieve_log_entries.py "Title") here for a script to present all log entries when a numerical ID is specified on command line.
 
 We also created a *HASH* called "known:", with the keys within it named as so:
 
@@ -99,11 +99,11 @@ We have a *ZSET* for each collection, named for a collection's numerical ID. We 
 
 What else can we do?
 
-* Given that we have IP addresses, we could do something interesting if we figured out what cities the visitors were originating from. 
+Given that we have IP addresses, we could do something interesting if we figured out what cities the visitors were originating from. 
 
-I have begun looking into "grok" possibilities, but realize I *already* have code that can look up cities based on IP address from my interaction with "Redis in Action" book. 
+View [ip-to-city-and-country-lookup.py]( https://github.com/terryjbates/redis-log-import/blob/master/ip-to-city-and-country-lookup.py "Title") here.
 
-View ip-to-city-and-country-lookup.py here.
+View  here.
 
     find_city_by_ip(conn, '99.32.443.66')
         returns-->[u'Houston', u'TX', u'US']
