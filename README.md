@@ -21,7 +21,7 @@ with requests for content from the collections portion of the URL namespace:
 
     99.32.443.66 - [06/May/2013:09:54:52 -0400] "GET /index.php HTTP/1.1" 200 (etc) <numerical ID>
 
-Figuring out what log lines are attached to a collection is simple enough by grepping for the numerical identifier through the access log. It becomes challenging if the web presence is served by multiple machines. It is easy to wait until day's end, when traffic is not "live", grep each individual web server's access logs, combine log lines of interest, sort by timestamp and present them. We can do this *while* the data is being collected.
+Figuring out what log lines are attached to a collection is simple enough by using grep to search for the numerical identifier in the access log. It becomes challenging if the web presence is served by multiple machines. It is easy to wait until day's end, when traffic is not "live", grep each individual web server's access logs, combine log lines of interest, sort by timestamp and present them. We can do this *while* the data is being collected.
 
 # Data Collection Questions
 
@@ -46,7 +46,7 @@ First, it may be possible that "nc" could silently drop information in transit. 
 Post-processing of the output file would be needed to adjust for the occurrence of mis-ordered log lines, but doing that makes the solution less "real-time." A long-running SSH tunnel or even stunnel may ensure reliable delivery, but there is still a problem of sorting out of sequence log lines.
 
 # Building a Solution
-I poked a stick at this thing called Redis and discovered that it does something called "sorted sets" (*ZSET*s). In these data structures, each element has a value and a score. While the values must be unique the scores can repeat. In my mind, the value would be the full content of an entire log line and the score would be something to assist in sorting. Notably, converting the timestamp of a log line to epoch time format fits nicely. We can ignore *when* we get log data for a collection, and use the timestamp information in log line to generate a score, using the score to sort amongst *all* loglines from *all* web servers we have.
+I poked a stick at this thing called Redis and discovered that it does something called "sorted sets" (*ZSET*s). In these data structures, each element has a value and a score. While the values must be unique the scores can repeat. In my mind, the value would be the full content of an entire log line and the score would be something to assist in sorting. Notably, converting the timestamp of a log line to epoch time format fits nicely. We can ignore *when* we get log data for a collection, and use the timestamp information in log line to generate a score, using the score to sort amongst *all* log lines from *all* web servers we have.
 
 # Obtaining and Storing Log Data
 
@@ -56,7 +56,7 @@ We construct *ZSET*s for each collection as so:
 
 As input arrives, use the numerical identifier to ZADD log lines to the corresponding key name. If the *ZSET* does not exist, the operation will create it.
 
-If we configure SSH keys or some other method to SSH easily to webservers, we can remotely execute the "tail" command, and pipe the output into a script to do the import of data into Redis. Use of the *myThread.py* (stashed in one of my other repos) means this can be fired off on all systems of interest at the same time.
+If we configure SSH keys or some other method to SSH easily to web servers, we can remotely execute the "tail" command, and pipe the output into a script to do the import of data into Redis. Use of the *myThread.py* (stashed in one of my other repos) means this can be fired off on all systems of interest at the same time.
 
     ssh <host> "tail -f /path/to/access_log| egrep -e ' [[:digit:]]+$' | ./process_log_input.py
 
@@ -68,7 +68,7 @@ So, we now have a number of *ZSET*S pegged to individual collection numerical id
 
 You specify the keyname, the index of the "start" element (0) and the "end" element. "-1" indicates the last element.
 
-Within Python with the redis module ipmorted, to get a list of the log lines, sorted by score:
+Within Python with the redis module imported, to get a list of the log lines, sorted by score:
 
     for log_line in conn.zrange('logs:collid:' + collid , 0, -1):
         print log_line
@@ -122,7 +122,7 @@ We will use *ZSET*s again to represent how often a country-city-state combinatio
 
 We confirm what happens in Redis:
 
-    redis 127.0.0.1:6379> zrevrange   location:collid:762 0 4 withscores
+    redis 127.0.0.1:6379> zrevrange location:collid:762 0 4 withscores
      1) "US--"
      2) "114"
      3) "US-VA-Ashburn"
